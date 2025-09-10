@@ -1,0 +1,89 @@
+<!doctype html>
+<html lang="ko">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>오늘의 재물운 · NFC</title>
+  <style>
+    body{font-family: -apple-system, BlinkMacSystemFont, "Helvetica Neue", "Noto Sans KR", "Apple SD Gothic Neo", sans-serif;
+         margin:0; padding:0; display:flex; align-items:center; justify-content:center;
+         min-height:100vh; background: linear-gradient(120deg,#fff7e6,#e8f7ff); color:#111;}
+    .card{width:95%; max-width:520px; background:white; border-radius:16px; box-shadow:0 10px 30px rgba(0,0,0,0.12);
+          padding:28px; text-align:center;}
+    h1{margin:0 0 8px 0; font-size:20px;}
+    p.msg{font-size:18px; margin:18px 0; min-height:56px; display:flex; align-items:center; justify-content:center;}
+    small{color:#666; display:block; margin-top:6px;}
+    button{background:#0077ff; color:white; border:none; padding:10px 16px; border-radius:10px; font-size:15px; cursor:pointer;}
+    .muted{color:#999; font-size:13px; margin-top:12px;}
+    footer{margin-top:14px; font-size:12px; color:#777;}
+    .tagline{font-weight:600; color:#0b5; margin-top:6px;}
+    .hint{margin-top:12px; color:#444; font-size:14px;}
+    .chip{display:inline-block; padding:6px 10px; background:#f4f7ff; border-radius:999px; margin:6px 4px; font-size:13px; color:#115;}
+    .copy{margin-left:8px; background:#eee; color:#333; padding:6px 8px; border-radius:8px; border:none; cursor:pointer;}
+  </style>
+</head>
+<body>
+  <div class="card" role="main" aria-labelledby="mainTitle">
+    <h1 id="mainTitle">오늘의 재물운 ✨</h1>
+    <div class="tagline">NFC 태그를 터치하면 매번 다른 메시지가 나타나요</div>
+
+    <p class="msg" id="msg">잠시만요... 행운을 불러옵니다!</p>
+    <button id="newBtn">다시 뽑기</button>
+    <div class="hint">태그 터치 시마다 자동으로 랜덤 메시지가 보입니다.</div>
+
+    <div class="muted">
+      <div style="margin-top:10px;">
+        <span class="chip">재물운</span>
+        <span class="chip">절약 팁</span>
+        <span class="chip">금융 조언</span>
+      </div>
+      <small>원하시면 메시지를 직접 편집해서 사용하세요.</small>
+    </div>
+
+    <footer>
+      <div>태그에 저장할 URL: <strong id="pageUrl">--</strong>
+        <button class="copy" id="copyBtn">복사</button>
+      </div>
+      <div style="margin-top:8px;">(GitHub Pages, Netlify 등에 업로드 후 URL을 태그에 기록하세요)</div>
+    </footer>
+  </div>
+
+<script>
+// 메시지 목록 (50개)
+const messages = ['오늘은 작은 절약이 큰 행운으로 이어집니다 💰', '대중교통을 이용하면 5,000원이 절약돼요 🚍', '불필요한 구독을 하나만 줄여도 저축이 늘어납니다 📺', '지출을 기록하는 습관이 당신을 부자로 만듭니다 ✍️', '오늘 커피를 한 잔 덜 마시면 내일 저금통이 웃습니다 ☕➡️💵', '재물운이 들어오는 하루예요 ✨', '예상치 못한 선물이 올 수도 있습니다 🎁', '적은 돈이라도 꾸준히 모으면 큰 자산이 됩니다 📈', '신용카드를 쓰기 전 한 번 더 생각해보세요 💳', '현금을 조금이라도 챙겨두면 불필요한 소비를 막을 수 있어요 💵', '오늘은 금전운이 강해요, 좋은 소식이 찾아올 수 있습니다 🍀', '작은 지출을 줄이면 큰 돈을 아낄 수 있습니다 💡', '친구와 비용을 나누면 절약이 두 배가 됩니다 🤝', '대중교통 대신 걷기를 선택하면 건강과 돈을 함께 얻습니다 🚶\u200d♂️', '오늘은 저축을 시작하기 딱 좋은 날이에요 🏦', '식비를 줄이면 가장 큰 지출을 절약할 수 있습니다 🍱', '현명한 소비가 행운을 불러옵니다 🌟', '할인 쿠폰을 챙기면 지갑이 두꺼워져요 🎟️', '충동구매를 참으면 내일이 더 밝습니다 🛍️', '오늘 지출을 기록하면 재산이 보입니다 📊', '재물운이 상승하는 하루예요 ⬆️', '오늘의 소비가 내일의 자산을 만듭니다 💎', '필요 없는 쇼핑카트는 비워두세요 🛒', '현명한 소비자는 결국 부자가 됩니다 🧑\u200d💼', '작게 시작한 투자도 큰 기회를 만듭니다 🌱', '대중교통비 아끼면 연간 수십만 원 절약 가능 🚉', '잔돈을 모으면 뜻밖의 큰돈이 됩니다 🪙', '오늘은 지출보다 저축이 우세합니다 ⚖️', '사소한 절약이 큰 행복을 부릅니다 😃', '계획적인 소비가 당신을 지켜줍니다 🛡️', '작은 기부가 큰 복으로 돌아옵니다 🙏', '오늘 점심 도시락을 싸오면 만 원 절약 🍱', '중고 거래로 새 지출을 줄여보세요 ♻️', '불필요한 이자는 내일의 나를 힘들게 합니다 💸', '오늘은 금전운이 따라주는 날이에요 🌞', '가격 비교를 하면 현명한 소비가 됩니다 🔍', '현금 결제는 지출을 더 잘 통제할 수 있어요 💵', '할인 행사에 속지 말고 꼭 필요한 것만 구매하세요 🛒', '오늘은 지출보다 저축에 집중하세요 🏦', '기분 소비 대신 저금통을 채워보세요 🐷', '내일을 위해 오늘 1만원만 저축해보세요 📉➡️📈', '중복된 지출을 줄이면 재산이 늘어납니다 ➕', '작은 돈도 관리하면 큰 자산이 됩니다 🏡', '오늘은 뜻밖의 행운이 찾아올 수 있어요 🌈', '금전적인 인내가 내일의 자유를 만듭니다 🕊️', '쇼핑 전 장바구니를 한 번 더 확인하세요 ✅', '절약은 불편이 아니라 미래를 위한 투자입니다 ⏳', '대중교통 이용으로 환경도 지키고 돈도 아껴요 🌍', '오늘은 새로운 재테크 정보를 접할 수 있습니다 📚', '재물운이 밝습니다, 계획적으로 활용해보세요 🔮'];
+
+// 랜덤 메시지 함수
+function getRandomMessage(){
+  const idx = Math.floor(Math.random() * messages.length);
+  return messages[idx];
+}
+
+// 화면에 메시지 표시
+const msgEl = document.getElementById('msg');
+function showMessage(){
+  const m = getRandomMessage();
+  msgEl.textContent = m;
+}
+
+// 초기 표시
+showMessage();
+
+// 버튼으로 다시 뽑기
+document.getElementById('newBtn').addEventListener('click', showMessage);
+
+// 페이지 URL 표시
+const pageUrlEl = document.getElementById('pageUrl');
+pageUrlEl.textContent = window.location.href;
+
+// 복사 버튼
+document.getElementById('copyBtn').addEventListener('click', async () => {
+  try {
+    await navigator.clipboard.writeText(window.location.href);
+    alert('URL이 복사되었습니다. NFC 태그에 이 주소를 기록하세요.');
+  } catch (e) {
+    alert('복사 실패. 수동으로 복사하세요: ' + window.location.href);
+  }
+});
+</script>
+</body>
+</html>
